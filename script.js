@@ -1,15 +1,14 @@
-/** CONST STACK **/
-const DISPLAY = { currentOp:"+", toptext:"0", bottomtext:"0"};
+const DISPLAY = { negation:"—", toptext:"", bottomtext:""};
 const EQUAL = {symbol: "=", id: "equal", value: null};
 const CLEAR = {symbol:"AC", id:"allclear", value: null};
-const DEL = {symbol: "C", id:"clear", value: null}
+const DEL = {symbol: "←", id:"backspace", value: null}
 const MUL = {symbol:"*", id: "multiply", value: null};
 const SUB = {symbol: "-", id: "subtract", value: null};
 const DIV = {symbol: "/", id: "divide", value: null};
 const EXP = {symbol: "^", id: "exponent", value: null};
 const NEG = {symbol: "±", id: "signflip", value: null};
 const ADD = {symbol: "+", id: "add", value: null};
-const DEC = {symbol: ".", id: "decimal", value: null};
+const DEC = {symbol: ".", id: "decimal", value: "."};
 const ONE = {symbol: "1", id: "1", value: 1};
 const TWO = {symbol: "2", id: "2", value: 2};
 const THREE = {symbol: "3", id: "3", value: 3};
@@ -20,8 +19,8 @@ const SEVEN = {symbol: "7", id: "7", value: 7};
 const EIGHT = {symbol: "8", id: "8", value: 8};
 const NINE = {symbol: "9", id: "9", value: 9};
 const ZERO = {symbol: "0", id: "0", value: 0};
-let lastOperation; // allow for undo
-const history = [null]; 
+let isNegative = 0;
+let globalLastOp = {};
 
 // b_ constants for buttons
 const b_1 = document.getElementById(ONE.id);
@@ -74,7 +73,7 @@ b_c.addEventListener("click", (e) => update(DEL));
 
 const b_dec = document.getElementById(DEC.id);
 b_dec.textContent = DEC.symbol;
-b_dec.addEventListener("click", (e) => update(DEC))
+b_dec.addEventListener("click", (e) => update(DEC));
 
 const b_mul = document.getElementById(MUL.id);
 b_mul.textContent = MUL.symbol; 
@@ -104,23 +103,87 @@ const b_exp = document.getElementById(EXP.id);
 b_exp.textContent = EXP.symbol;
 b_exp.addEventListener("click", (e) => update(EXP));
 
-// d_ constants for display elements
+// d_ constants for display elements, these will be set by refresh();
 const d_top = document.getElementById("opDisplay");
-d_top.textContent = DISPLAY.toptext;
-
 const d_bot = document.getElementById("currDisplay");
-d_bot.textContent = DISPLAY.bottomtext;
-
-const d_currOp = document.getElementById("currOp");
-d_currOp.textContent = DISPLAY.currentOp;
-
-/** EVENT LISTENER STACK */
+const d_negation = document.getElementById("negation");
+d_negation.style.visibility = "hidden";
 
 /** PROGRAM LOGIC  */
 
-function update(pressed){
-    console.log(pressed);
+refresh();
+
+//DISPLAY FUNCTIONS
+
+function refresh(){
+    //this handles any leading zeros.
+    for(let i = 0; i < DISPLAY.bottomtext.split("").length;i++){
+        if(DISPLAY.bottomtext.split("")[0] === "0" && 
+            DISPLAY.bottomtext.split("")[1] && 
+            DISPLAY.bottomtext.split("")[1] !== "."){
+                DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
+        }
+        else break;
+    }
+    d_top.textContent=DISPLAY.toptext;
+    d_bot.textContent=DISPLAY.bottomtext;
 }
+
+function assembleNumber(pressed) { 
+    if(DISPLAY.bottomtext.length > 28) return;
+    if(pressed.id === "decimal") {
+        if(DISPLAY.bottomtext.indexOf(".") !== -1) {
+            console.error("Decimal key pressed. Ignored as there is already a floating point.")
+            return;
+        }
+        else {
+            if(DISPLAY.bottomtext.length === 0) {
+                DISPLAY.bottomtext += ZERO.value + pressed.value;                
+                return;
+            }
+        }
+    }
+    DISPLAY.bottomtext+=pressed.value;
+    refresh();
+}
+
+//BUTTON FUNCTIONS
+
+function update(pressed){
+    if(pressed.value !== null){
+        console.log(pressed);
+        assembleNumber(pressed);
+    };
+    switch(pressed.id) {
+        case MUL.id:
+            break;
+        case SUB.id:
+            break;
+        case DEL.id:
+            DISPLAY.bottomtext = DISPLAY.bottomtext.slice(0, -1);
+            break;
+        case CLEAR.id:
+            DISPLAY.toptext = '';
+            DISPLAY.bottomtext = '';
+            globalLastOp = {};
+            break;
+        case EQUAL.id:
+            break;
+        case DIV.id:
+            break;
+        case EXP.id:
+            break;
+        case NEG.id:
+            if(!isNegative) { d_negation.style.visibility = "visible"; isNegative = 1; }
+            else { d_negation.style.visibility = "hidden"; isNegative = 0; }
+        case ADD.id:
+            break;
+    }
+    globalLastOp = pressed;
+    refresh();
+}
+
+// MATH FUNCTIONS
 
 function operate(operator, secondOperand, firstOperand = 0) {
     switch(operator) {
