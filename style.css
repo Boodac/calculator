@@ -24,13 +24,9 @@ body {
     height: 2rem;
 }
 
-#bottomline {
+#bottomline, #topline {
     display: flex;
     justify-content: space-between;
-}
-
-#topline {
-    align-self: flex-end;
 }
 
 .cluster {

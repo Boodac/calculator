@@ -1,4 +1,4 @@
-const DISPLAY = { negation:"—", toptext:"", bottomtext:""};
+const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const EQUAL = {symbol: "=", id: "equal", value: null};
 const CLEAR = {symbol:"AC", id:"allclear", value: null};
 const DEL = {symbol: "←", id:"backspace", value: null}
@@ -19,7 +19,6 @@ const SEVEN = {symbol: "7", id: "7", value: 7};
 const EIGHT = {symbol: "8", id: "8", value: 8};
 const NINE = {symbol: "9", id: "9", value: 9};
 const ZERO = {symbol: "0", id: "0", value: 0};
-let isNegative = 0;
 let globalLastOp = {};
 
 // b_ constants for buttons
@@ -107,7 +106,10 @@ b_exp.addEventListener("click", (e) => update(EXP));
 const d_top = document.getElementById("opDisplay");
 const d_bot = document.getElementById("currDisplay");
 const d_negation = document.getElementById("negation");
+const d_currOp = document.getElementById("currOp");
+d_negation.textContent = DISPLAY.negation;
 d_negation.style.visibility = "hidden";
+let isNegative = 0;
 
 /** PROGRAM LOGIC  */
 
@@ -127,9 +129,10 @@ function refresh(){
     }
     d_top.textContent=DISPLAY.toptext;
     d_bot.textContent=DISPLAY.bottomtext;
+    d_currOp.textContent=DISPLAY.currSign;
 }
 
-function assembleNumber(pressed) { 
+function assembleOperand(pressed) { 
     if(DISPLAY.bottomtext.length > 28) return;
     if(pressed.id === "decimal") {
         if(DISPLAY.bottomtext.indexOf(".") !== -1) {
@@ -152,9 +155,20 @@ function assembleNumber(pressed) {
 function update(pressed){
     if(pressed.value !== null){
         console.log(pressed);
-        assembleNumber(pressed);
+        assembleOperand(pressed);
     };
+    if(pressed.value === null && DISPLAY.bottomtext === "") {
+        if(pressed.id === NEG.id) {
+            DISPLAY.bottomtext = "0";
+        }
+    }
     switch(pressed.id) {
+        case ADD.id:
+            DISPLAY.toptext = operate(ADD, DISPLAY.toptext, DISPLAY.bottomtext);
+            DISPLAY.bottomtext = "";
+            DISPLAY.currSign = ADD.symbol;
+            refresh();
+            break;
         case MUL.id:
             break;
         case SUB.id:
@@ -165,6 +179,8 @@ function update(pressed){
         case CLEAR.id:
             DISPLAY.toptext = '';
             DISPLAY.bottomtext = '';
+            isNegative = 0;
+            d_negation.style.visibility = "hidden";
             globalLastOp = {};
             break;
         case EQUAL.id:
@@ -174,9 +190,14 @@ function update(pressed){
         case EXP.id:
             break;
         case NEG.id:
-            if(!isNegative) { d_negation.style.visibility = "visible"; isNegative = 1; }
-            else { d_negation.style.visibility = "hidden"; isNegative = 0; }
-        case ADD.id:
+            if(isNegative === 0) {
+                isNegative = 1;
+                d_negation.style.visibility = "visible";
+            }
+            else {
+                isNegative = 0;
+                d_negation.style.visibility = "hidden";
+            } 
             break;
     }
     globalLastOp = pressed;
@@ -206,7 +227,7 @@ function operate(operator, secondOperand, firstOperand = 0) {
 }
 
 function add(first, second){
-    return first + second;
+    return Number(first) + Number(second);
 }
 
 function sub(first, second){
