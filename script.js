@@ -1,7 +1,7 @@
 const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
-const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "Enter", "Space"]};
+const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "Enter", "Space", "NumpadEnter"]};
 const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]};
 const DEL = {symbol: "←", id:"backspace", value: null, code: ["Backspace", "Delete"]}
 const MUL = {symbol:"*", id: "multiply", value: null, code: ["NumpadMultiply"]};
@@ -22,6 +22,7 @@ const EIGHT = {symbol: "8", id: "8", value: 8, code: ["Digit8", "Numpad8"]};
 const NINE = {symbol: "9", id: "9", value: 9, code: ["Digit9", "Numpad9"]};
 const ZERO = {symbol: "0", id: "0", value: 0, code: ["Digit0", "Numpad0"]};
 let globalLastOp = {};
+let errFlag = 0;
 
 // b_ constants for buttons
 const b_1 = document.getElementById(ONE.id);
@@ -112,7 +113,7 @@ d_negation.toggle = function () {
     if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
     else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
     else if(DISPLAY.toptext && !DISPLAY.bottomtext) {
-        if(DISPLAY.toptext.charAt(0) === NEGATIVE) {
+        if(DISPLAY.toptext.toString().charAt(0) === NEGATIVE) {
             DISPLAY.toptext = DISPLAY.toptext.substring(1);
         }
         else DISPLAY.toptext = NEGATIVE + DISPLAY.toptext;
@@ -147,6 +148,7 @@ function refresh(){
 
 function assembleOperand(pressed) {
     if(DISPLAY.bottomtext.length > 28) return;
+    if(DISPLAY.toptext && !DISPLAY.bottomtext && !DISPLAY.currSign) return;
     if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) return;
     if(pressed === DEC) {
         if(DISPLAY.bottomtext.indexOf(".") !== -1) return;
@@ -164,31 +166,68 @@ function assembleOperand(pressed) {
     refresh();
 }
 
+DISPLAY.isZero = function () {
+    console.log(DISPLAY.bottomtext);
+    console.log(DISPLAY.toptext);
+    console.log(DISPLAY.currSign);
+    if(DISPLAY.bottomtext == "") return false;
+    if(DISPLAY.bottomtext[0] !== 0) return false;
+    if(DISPLAY.bottomtext[1] === DEC.symbol && !DISPLAY.bottomtext[2]) {
+        DISPLAY.bottomtext = ZERO.symbol;
+        return true;
+    }
+    return false;
+}
+
+function error() {
+    console.log("Bottom" + DISPLAY.bottomtext);
+    console.log("Toptext:" + DISPLAY.toptext);
+    console.log("Currsign:" + DISPLAY.currSign);
+    console.error("ALERT!");
+    DISPLAY.toptext = "HOW MUCH TIME";
+    DISPLAY.bottomtext = "DO YOU HAVE?";
+    DISPLAY.currSign = "";
+    globalLastOp = {};
+    errFlag = 1;
+    refresh();
+}
+
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === CLEAR) { reset(); return; }
+    if(errFlag) { reset(); errFlag = 0; }
     if(pressed === DEL) { backspace(); return; }
+    if(errFlag == 1) { reset(); return; }
+    if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
-    if(pressed === EQUAL) { equalOut(); refresh(); return; }
-    if(globalLastOp !== {}) { equalOut(); }
+    if(pressed === EQUAL) { 
+        if(globalLastOp === DIV && DISPLAY.isZero) {
+            error();
+        }
+        equalOut(); refresh(); return; }
+    if(globalLastOp !== {}) { DISPLAY.currSign = pressed.Symbol; equalOut(); }
     globalLastOp = pressed;
+    if(pressed === DIV && DISPLAY.isZero) {
+        error();
+        return;
+    }
     if(!DISPLAY.toptext){
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = "";
     }
     else if(!DISPLAY.bottomtext) {
         DISPLAY.currSign = pressed.symbol;
-    }
-    else {
+    } else {
+        DISPLAY.currSign = pressed.symbol;
         equalOut(pressed);
     }
     refresh();
 }
 
-function equalOut(pressed) {
+function equalOut(pressed) { 
     if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
+    if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
     if (!DISPLAY.toptext) {
         if(d_negation.isShown()) {
             DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
@@ -210,13 +249,15 @@ function reset() {
     DISPLAY.toptext = '';
     DISPLAY.bottomtext = '';
     DISPLAY.currSign = CLEAR.message;
-    isNegative = 0;
     d_negation.style.visibility = "hidden";
     globalLastOp = {};
     refresh();
 }
 
 function backspace() {
+    if(errFlag) {
+        reset(); return;
+    }
     if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
         DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
         reset(); return; 
@@ -299,7 +340,8 @@ function handleKeypress(event) {
             break;
         case EQUAL.code[0]: 
         case EQUAL.code[1]: 
-        case EQUAL.code[2]: update(EQUAL);
+        case EQUAL.code[2]:
+        case EQUAL.code[3]: update(EQUAL);
             break;
         case CLEAR.code[0]: 
         case CLEAR.code[1]: update(CLEAR);
