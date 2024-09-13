@@ -1,25 +1,26 @@
+const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
-const EQUAL = {symbol: "=", id: "equal", value: null};
-const CLEAR = {symbol:"AC", id:"allclear", value: null};
-const DEL = {symbol: "←", id:"backspace", value: null}
-const MUL = {symbol:"*", id: "multiply", value: null};
-const SUB = {symbol: "—", id: "subtract", value: null};
-const DIV = {symbol: "/", id: "divide", value: null};
-const EXP = {symbol: "^", id: "exponent", value: null};
-const NEG = {symbol: "±", id: "signflip", value: null};
-const ADD = {symbol: "+", id: "add", value: null};
-const DEC = {symbol: ".", id: "decimal", value: "."};
-const ONE = {symbol: "1", id: "1", value: 1};
-const TWO = {symbol: "2", id: "2", value: 2};
-const THREE = {symbol: "3", id: "3", value: 3};
-const FOUR = {symbol: "4", id: "4", value: 4};
-const FIVE = {symbol: "5", id: "5", value: 5};
-const SIX = {symbol: "6", id: "6", value: 6};
-const SEVEN = {symbol: "7", id: "7", value: 7};
-const EIGHT = {symbol: "8", id: "8", value: 8};
-const NINE = {symbol: "9", id: "9", value: 9};
-const ZERO = {symbol: "0", id: "0", value: 0};
+const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "Enter", "Space"]};
+const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]};
+const DEL = {symbol: "←", id:"backspace", value: null, code: ["Backspace", "Delete"]}
+const MUL = {symbol:"*", id: "multiply", value: null, code: ["NumpadMultiply"]};
+const SUB = {symbol: "—", id: "subtract", value: null, code: ["Minus", "NumpadSubtract"]};
+const DIV = {symbol: "/", id: "divide", value: null, code: ["Slash", "NumpadDivide"]};
+const EXP = {symbol: "^", id: "exponent", value: null, code: [""]};
+const NEG = {symbol: "±", id: "signflip", value: null, code: [""]};
+const ADD = {symbol: "+", id: "add", value: null, code: ["NumpadAdd"]};
+const DEC = {symbol: ".", id: "decimal", value: ".", code: ["Period", "NumpadDecimal"]};
+const ONE = {symbol: "1", id: "1", value: 1, code: ["Digit1", "Numpad1"]};
+const TWO = {symbol: "2", id: "2", value: 2, code: ["Digit2", "Numpad2"]};
+const THREE = {symbol: "3", id: "3", value: 3, code: ["Digit3", "Numpad3"]};
+const FOUR = {symbol: "4", id: "4", value: 4, code: ["Digit4", "Numpad4"]};
+const FIVE = {symbol: "5", id: "5", value: 5, code: ["Digit5", "Numpad5"]};
+const SIX = {symbol: "6", id: "6", value: 6, code: ["Digit6", "Numpad6"]};
+const SEVEN = {symbol: "7", id: "7", value: 7, code: ["Digit7", "Numpad7"]};
+const EIGHT = {symbol: "8", id: "8", value: 8, code: ["Digit8", "Numpad8"]};
+const NINE = {symbol: "9", id: "9", value: 9, code: ["Digit9", "Numpad9"]};
+const ZERO = {symbol: "0", id: "0", value: 0, code: ["Digit0", "Numpad0"]};
 let globalLastOp = {};
 
 // b_ constants for buttons
@@ -122,9 +123,10 @@ d_negation.toggle = function () {
         }
         else DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
     }
+    refresh();
 }
-d_negation.isHidden = function () {
-    return d_negation.style.visibility === "hidden";
+d_negation.isShown = function () {
+    return d_negation.style.visibility === "visible";
 }
 const d_currOp = document.getElementById("currOp");
 d_negation.textContent = DISPLAY.negation;
@@ -137,6 +139,7 @@ refresh(); // lol
 // DISPLAY FUNCTIONS
 
 function refresh(){
+    console.log("Refreshing the screen.");
     d_top.textContent = DISPLAY.toptext;
     d_bot.textContent = DISPLAY.bottomtext;
     d_currOp.textContent = DISPLAY.currSign;
@@ -149,17 +152,15 @@ function assembleOperand(pressed) {
         if(DISPLAY.bottomtext.indexOf(".") !== -1) return;
         if(!DISPLAY.bottomtext) {
             DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
-            refresh();
-            return;
+            refresh(); return;
         } else {
             if(DISPLAY.bottomtext.length === 0) {
                 DISPLAY.bottomtext += ZERO.value + pressed.value;
-                refresh();                
-                return;
+                refresh(); return;
             }
         }
     }
-    DISPLAY.bottomtext+=pressed.value;
+    DISPLAY.bottomtext += pressed.value;
     refresh();
 }
 
@@ -169,31 +170,11 @@ function update(pressed){
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === CLEAR) { reset(); return; }
     if(pressed === DEL) { backspace(); return; }
-    if(pressed === EQUAL) {
-        if (!DISPLAY.toptext) {
-            if(!d_negation.isHidden()) {
-                DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
-                d_negation.toggle();
-            }
-            DISPLAY.toptext = DISPLAY.bottomtext;
-            DISPLAY.bottomtext = "";
-        }
-        else {
-            DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
-            DISPLAY.bottomtext = "";
-            DISPLAY.currSign = "";
-        }
-        globalLastOp = {};
-        refresh(); return;
-    }
-    if(pressed === NEG) {
-        d_negation.toggle();
-        refresh(); 
-        return;
-    }
-    DISPLAY.currSign = pressed.symbol;
+    if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
+    if(pressed === EQUAL) { equalOut(); refresh(); return; }
+    if(globalLastOp !== {}) { equalOut(); }
     globalLastOp = pressed;
-    if(!DISPLAY.toptext) {
+    if(!DISPLAY.toptext){
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = "";
     }
@@ -201,10 +182,28 @@ function update(pressed){
         DISPLAY.currSign = pressed.symbol;
     }
     else {
-        DISPLAY.toptext = operate(pressed, DISPLAY.bottomtext, DISPLAY.toptext);
-        DISPLAY.bottomtext = "";
-    }    
+        equalOut(pressed);
+    }
     refresh();
+}
+
+function equalOut(pressed) {
+    if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
+    if (!DISPLAY.toptext) {
+        if(d_negation.isShown()) {
+            DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
+            d_negation.toggle();
+        }
+        DISPLAY.toptext = DISPLAY.bottomtext;
+        DISPLAY.bottomtext = "";
+    }
+    else {
+        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.bottomtext = "";
+        DISPLAY.currSign = "";
+    }
+    globalLastOp = {};
+    return;
 }
 
 function reset() {
@@ -222,13 +221,13 @@ function backspace() {
         DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
         reset(); return; 
     }
-    if(DISPLAY.bottomtext) DISPLAY.bottomtext = DISPLAY.bottomtext.slice(0, -1);
+    if(DISPLAY.bottomtext) DISPLAY.bottomtext = DISPLAY.bottomtext.toString().slice(0, -1);
     else if(DISPLAY.currSign) {
         DISPLAY.currSign = "";
         DISPLAY.bottomtext = DISPLAY.toptext;
         DISPLAY.toptext = "";
     }
-    else if(DISPLAY.toptext) DISPLAY.toptext = String(DISPLAY.toptext.slice(0, -1));
+    else if(DISPLAY.toptext) DISPLAY.toptext = DISPLAY.toptext.toString().slice(0, -1);
     refresh();
 }
 
@@ -240,16 +239,16 @@ function operate(operator, firstOperand, secondOperand) {
             return add(firstOperand, secondOperand);
             break;
         case SUB:
-            return sub(firstOperand, secondOperand);
+            return sub(secondOperand, firstOperand);
             break;
         case DIV:
-            return div(secondOperand, firstOperand);
+            return div(firstOperand, secondOperand);
             break;
         case MUL:
             return mul(firstOperand, secondOperand);
             break;
         case EXP:
-            return exp(firstOperand, secondOperand);
+            return exp(secondOperand, firstOperand);
             break;
     }
 }
@@ -272,4 +271,57 @@ function div(first, second){
 
 function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
+}
+
+body.addEventListener("keyup", (e) => handleKeypress(e));
+
+function handleKeypress(event) {
+    switch(event.code) {
+        case ONE.code[0]: update(ONE);
+            break;
+        case TWO.code[0]: update(TWO);
+            break;
+        case THREE.code[0]: update(THREE);
+            break;
+        case FOUR.code[0]: update(FOUR);
+            break;
+        case FIVE.code[0]: update(FIVE);
+            break;
+        case SIX.code[0]: update(SIX);
+            break;
+        case SEVEN.code[0]: update(SEVEN);
+            break;
+        case EIGHT.code[0]: update(EIGHT);
+            break;
+        case NINE.code[0]: update(NINE);
+            break;
+        case ZERO.code[0]: update(ZERO);
+            break;
+        case EQUAL.code[0]: 
+        case EQUAL.code[1]: 
+        case EQUAL.code[2]: update(EQUAL);
+            break;
+        case CLEAR.code[0]: 
+        case CLEAR.code[1]: update(CLEAR);
+            break;
+        case DEL.code[0]: 
+        case DEL.code[1]: update(DEL);
+            break;
+        case MUL.code[0]: update(MUL);
+            break;
+        case SUB.code[0]: update(SUB);
+            break;
+        case DIV.code[0]: update(DIV);
+            break;
+        case EXP.code[0]: update(EXP);
+            break;
+        case NEG.code[0]: update(NEG);
+            break;
+        case ADD.code[0]: update(ADD);
+            break;
+        case DEC.code[0]: update(DEC);
+            break;
+        default: return;
+    }
+    console.log(event);
 }
