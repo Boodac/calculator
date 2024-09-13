@@ -143,3 +143,9 @@ button {
 .op {
     filter: brightness(0.85);
 }
+
+#marquee {
+    text-align: center;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 1rem;
+}

@@ -1,8 +1,8 @@
 // Hey stranger! Caution, if you are a TOP learner, DO NOT ATTEMPT TO EMULATE THIS CODE.
 // There are WAY easier ways to complete the assignment, I promise.
-// That said, there's some neat stuff in here. Enjoy!
+// That said, there's some neat stuff in here, if you can follow along. Enjoy!
 
-const hook = document.querySelector("#hook");
+const marquee = document.getElementById("marquee");
 const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
@@ -148,15 +148,28 @@ function refresh(){
     d_top.textContent = DISPLAY.toptext;
     d_bot.textContent = DISPLAY.bottomtext;
     d_currOp.textContent = DISPLAY.currSign;
+    if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) marquee.textContent = "lol ... You may want to clear.";
+    if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
+    if(DISPLAY.toptext === "5318008") marquee.textContent = "Turn your screen upside down!";
+    if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
 }
 
 function assembleOperand(pressed) {
-    if(DISPLAY.bottomtext.length > 28) return;
-    if(DISPLAY.toptext && !DISPLAY.bottomtext && !DISPLAY.currSign) return;
-    if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) return;
+    if(DISPLAY.bottomtext.length > 28) { 
+        marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
+        return; }
+    if(DISPLAY.toptext && !DISPLAY.bottomtext && !DISPLAY.currSign) {
+        marquee.textContent = "I'm pretty sure you want an operator here...";
+        return; }
+    if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) {
+        marquee.textContent = "I have no idea what you plan to do with that many zeroes.";
+        return; }
     if(pressed === DEC) {
-        if(DISPLAY.bottomtext.indexOf(".") !== -1) return;
+        if(DISPLAY.bottomtext.indexOf(".") !== -1) { 
+            marquee.textContent = "Are you trying to type in an IP address or something?";
+            return; }
         if(!DISPLAY.bottomtext) {
+            marquee.textContent = "Floating points, eh? Well, alright...";
             DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
             refresh(); return;
         } else {
@@ -167,13 +180,13 @@ function assembleOperand(pressed) {
         }
     }
     DISPLAY.bottomtext += pressed.value;
+    marquee.textContent = "Building...";
     refresh();
 }
 
 DISPLAY.isError = function (pressed) {
     if(DISPLAY.bottomtext !== "" && (DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.")) return true;
     if(DISPLAY.toptext !== "" && DISPLAY.bottomtext !== "" && DISPLAY.currSign === "") return true;
-    if(DISPLAY.currSign !== DIV && globalLastOp === DIV && (DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.")) return true;
     return false;
 }
 
@@ -183,20 +196,22 @@ function error() {
     DISPLAY.currSign = "";
     globalLastOp = {};
     errFlag = 1;
+    marquee.textContent = "Uh oh! Press any key to reset.";
     refresh();
 }
 
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    console.log(DISPLAY.bottomtext);
+    console.log("Update function running.");
+    marquee.textContent = "Operating...";
     if(pressed === DEL) { backspace(); return; }
     if(pressed === CLEAR) { reset(); return; }
     if(errFlag) { reset(); errFlag = 0; refresh(); return; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); return; }
     if(pressed === EQUAL) {
-        if(!DISPLAY.toptext) { DISPLAY.toptext = DISPLAY.bottomtext; DISPLAY.bottomtext = ""; return;} 
+        if(!DISPLAY.toptext) { DISPLAY.toptext = DISPLAY.bottomtext; DISPLAY.bottomtext = ""; refresh(); return;} 
         else { equalOut(pressed); refresh(); return; }
     }
     if(!DISPLAY.bottomtext && !DISPLAY.toptext) return;
@@ -213,6 +228,7 @@ function update(pressed){
 }
 
 function equalOut(pressed) { 
+    console.log("Equal out running.");
     if(DISPLAY.isError()) {error(); return;}
     if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
     if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
@@ -234,7 +250,7 @@ function equalOut(pressed) {
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = "";
     }
-    if(pressed===EQUAL) { DISPLAY.currSign = ""; }
+    if(pressed===EQUAL) DISPLAY.currSign = "";
     else globalLastOp = pressed;
     return;
 }
@@ -245,15 +261,18 @@ function reset() {
     DISPLAY.currSign = "";
     d_negation.style.visibility = "hidden";
     globalLastOp = {};
+    marquee.textContent = "All Clear! Enter a number to continue.";
     refresh();
 }
 
 function backspace() {
     if(errFlag) {
+        console.error ("Yeah nah, it's messed up. Resetting instead!");
         reset(); return;
     }
     if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
         DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
+        console.error("We're gonna assume you meant to clear it.");
         reset(); return; 
     }
     if(DISPLAY.bottomtext) DISPLAY.bottomtext = DISPLAY.bottomtext.toString().slice(0, -1);
@@ -263,6 +282,7 @@ function backspace() {
         DISPLAY.toptext = "";
     }
     else if(DISPLAY.toptext) DISPLAY.toptext = DISPLAY.toptext.toString().slice(0, -1);
+    marquee.textContent = "Undoing...";
     refresh();
 }
 
