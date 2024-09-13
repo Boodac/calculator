@@ -242,7 +242,7 @@ function operate(operator, firstOperand, secondOperand) {
             return sub(secondOperand, firstOperand);
             break;
         case DIV:
-            return div(firstOperand, secondOperand);
+            return div(secondOperand, firstOperand);
             break;
         case MUL:
             return mul(firstOperand, secondOperand);
