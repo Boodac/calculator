@@ -10,19 +10,38 @@ body {
     justify-content: center;
     align-items: center;
     font-family: "Droid Sans Mono", monospace;
+    font-size: 36px;
+}
+
+#attribution {;
+    text-align: right;
+    font-size: 1rem;
 }
 
 .container {
-    display: flex;
-    flex-direction: column;
+    
+}
+
+.calcBody{
+    padding: 1rem;
+    background-color: gray;
+    border-radius: 1rem;
+    box-shadow: rgb(38, 57, 77) 0px 20px 30px -10px;
 }
 
 .display {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    height: 2.5rem;
-    border: 1px solid black;
+    height: 2.5em;
+    border: 1px solid #b4b076;
+    margin-top: 1rem;
+}
+
+.screen {
+    background-color: #b4b076;
+    flex: 1;
+    text-align: right;
 }
 
 #bottomline, #topline {
@@ -30,23 +49,26 @@ body {
     justify-content: space-between;
 }
 
-#opDisplay {
-    margin-left: auto;
+#currOp {
+    flex-grow: 0;
 }
 
 .cluster {
     display: flex;
     flex: 1;
+    gap: 1rem;
 }
 
 .col {
     display: flex;
     flex-direction: column;
+    margin-top: 1rem;
+    gap: 1rem;
 }
 
 button {
     flex: 1 1 100%;
-    padding: 1rem 2rem;
+    padding: 2rem 4rem;
     border: 1px solid black;
     border-radius: 0.5rem;
 }
@@ -55,3 +77,4 @@ button {
     width: 0;
     height: 0;
 }
+

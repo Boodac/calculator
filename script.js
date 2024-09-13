@@ -1,7 +1,8 @@
 const hook = document.querySelector("#hook");
+const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
-const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "Enter", "Space", "NumpadEnter"]};
+const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "NumpadEnter"]};
 const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]};
 const DEL = {symbol: "←", id:"backspace", value: null, code: ["Backspace", "Delete"]}
 const MUL = {symbol:"*", id: "multiply", value: null, code: ["NumpadMultiply"]};
@@ -184,13 +185,18 @@ function error() {
 //BUTTON FUNCTIONS
 
 function update(pressed){
+    console.log(DISPLAY.bottomtext);
     if(pressed === DEL) { backspace(); return; }
     if(pressed === CLEAR) { reset(); return; }
     if(errFlag) { reset(); errFlag = 0; refresh(); return; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
-    if(pressed === EQUAL) { equalOut(pressed); refresh(); return; }
-    if(!DISPLAY.bottomtext) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
+    if(pressed === EQUAL) {
+        if(!DISPLAY.toptext) { DISPLAY.toptext = DISPLAY.bottomtext; DISPLAY.bottomtext = ""; return;} 
+        else { equalOut(pressed); refresh(); return; }
+    }
+    if(!DISPLAY.bottomtext && !DISPLAY.toptext) return;
+    if(!DISPLAY.bottomtext && (DISPLAY.toptext || DISPLAY.currSign)) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
     if(globalLastOp !== {} && !DISPLAY.toptext) { 
         globalLastOp = pressed;
         DISPLAY.currSign = pressed.symbol;
@@ -298,7 +304,11 @@ function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
 }
 
-hook.addEventListener("keyup", (e) => handleKeypress(e));
+
+console.log(EQUAL.code[0]);
+console.log(EQUAL.code[1]);
+
+document.addEventListener("keyup", (e) => handleKeypress(e));
 
 function handleKeypress(event) {
     switch(event.code) {
@@ -322,15 +332,20 @@ function handleKeypress(event) {
             break;
         case ZERO.code[0]: update(ZERO);
             break;
-        case EQUAL.code[0]: 
-        case EQUAL.code[1]: 
-        case EQUAL.code[2]:
+        case EQUAL.code[0]: update(EQUAL);
+            break;
+        case EQUAL.code[1]: update(EQUAL);
+            break;
+        case EQUAL.code[2]: update(EQUAL);
+            break;
         case EQUAL.code[3]: update(EQUAL);
             break;
-        case CLEAR.code[0]: 
+        case CLEAR.code[0]: update(CLEAR);
+            break;
         case CLEAR.code[1]: update(CLEAR);
             break;
-        case DEL.code[0]: 
+        case DEL.code[0]: update(DEL);
+            break; 
         case DEL.code[1]: update(DEL);
             break;
         case MUL.code[0]: update(MUL);
@@ -349,5 +364,4 @@ function handleKeypress(event) {
             break;
         default: return;
     }
-    console.log(event);
 }
