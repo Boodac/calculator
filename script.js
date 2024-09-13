@@ -203,15 +203,11 @@ function update(pressed){
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
     if(pressed === EQUAL) { 
         if(globalLastOp === DIV && DISPLAY.isZero) {
-            error();
+            error(); return;
         }
         equalOut(); refresh(); return; }
     if(globalLastOp !== {}) { DISPLAY.currSign = pressed.Symbol; equalOut(); }
-    globalLastOp = pressed;
-    if(pressed === DIV && DISPLAY.isZero) {
-        error();
-        return;
-    }
+    
     if(!DISPLAY.toptext){
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = "";
@@ -220,8 +216,10 @@ function update(pressed){
         DISPLAY.currSign = pressed.symbol;
     } else {
         DISPLAY.currSign = pressed.symbol;
-        equalOut(pressed);
+        equalOut(globalLastOp);
+        DISPLAY.currSign = pressed.symbol;
     }
+    globalLastOp = pressed;
     refresh();
 }
 
