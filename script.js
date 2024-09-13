@@ -149,9 +149,11 @@ function refresh(){
     d_bot.textContent = DISPLAY.bottomtext;
     d_currOp.textContent = DISPLAY.currSign;
     if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) marquee.textContent = "lol ... You may want to clear.";
+    // these are memes
     if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
     if(DISPLAY.toptext === "5318008") marquee.textContent = "Turn your screen upside down!";
     if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
+    // memes complete
 }
 
 function assembleOperand(pressed) {
