@@ -9,7 +9,7 @@ const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "NumpadEnt
 const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]};
 const DEL = {symbol: "←", id:"backspace", value: null, code: ["Backspace", "Delete"]}
 const MUL = {symbol:"*", id: "multiply", value: null, code: ["NumpadMultiply"]};
-const SUB = {symbol: "—", id: "subtract", value: null, code: ["Minus", "NumpadSubtract"]};
+const SUB = {symbol: "-", id: "subtract", value: null, code: ["Minus", "NumpadSubtract"]};
 const DIV = {symbol: "÷", id: "divide", value: null, code: ["Slash", "NumpadDivide"]};
 const EXP = {symbol: "^", id: "exponent", value: null, code: [""]};
 const NEG = {symbol: "±", id: "signflip", value: null, code: [""]};
@@ -193,7 +193,7 @@ function update(pressed){
     if(pressed === CLEAR) { reset(); return; }
     if(errFlag) { reset(); errFlag = 0; refresh(); return; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
-    if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
+    if(pressed === NEG) { d_negation.toggle(); return; }
     if(pressed === EQUAL) {
         if(!DISPLAY.toptext) { DISPLAY.toptext = DISPLAY.bottomtext; DISPLAY.bottomtext = ""; return;} 
         else { equalOut(pressed); refresh(); return; }

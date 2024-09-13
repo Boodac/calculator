@@ -17,6 +17,7 @@ body {
     text-align: right;
     font-size: 1rem;
     font-family: "Roboto", sans-serif;
+    padding-top: 1em;
 }
 
 
@@ -27,8 +28,12 @@ body {
 .calcBody{
     padding: 1rem;
     background-color: #97b1aa;
+    border-top: 4px solid rgb(214, 241, 225);
+    border-left: 4px solid rgb(186, 196, 190);
+    border-right: 4px solid rgb(148, 182, 137);
+    border-bottom: 4px solid rgb(54, 73, 62);
     border-radius: 1rem;
-    box-shadow: rgb(6, 66, 14) 0px 20px 30px -10px;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
 }
 
 .display {
@@ -92,7 +97,10 @@ button {
     font-size: 1em;
     flex: 1 1 100%;
     padding: 1rem 3rem;
-    border: 1px solid rgb(93, 54, 119);
+    border-top: 1px solid rgb(214, 241, 225);
+    border-left: 1px solid rgb(186, 196, 190);
+    border-right: 1px solid rgb(148, 182, 137);
+    border-bottom: 1px solid rgb(54, 73, 62);
     border-radius: 0.5rem;
     background-color: #ffe1c6;
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
@@ -101,7 +109,7 @@ button {
 }
 
 .span1{
-    background-color: #ff6f91;
+    background-color: #c44f68;
 }
 
 .span2{
