@@ -1,5 +1,6 @@
 // Hey stranger! Caution, if you are a TOP learner, DO NOT ATTEMPT TO EMULATE THIS CODE.
 // There are WAY easier ways to complete the assignment, I promise.
+// That said, there's some neat stuff in here. Enjoy!
 
 const hook = document.querySelector("#hook");
 const body = document.querySelector("body");

@@ -28,10 +28,10 @@ body {
 .calcBody{
     padding: 1rem;
     background-color: #97b1aa;
-    border-top: 4px solid rgb(214, 241, 225);
-    border-left: 4px solid rgb(186, 196, 190);
-    border-right: 4px solid rgb(148, 182, 137);
-    border-bottom: 4px solid rgb(54, 73, 62);
+    border-top: 3px solid rgb(214, 241, 225);
+    border-left: 3px solid rgb(186, 196, 190);
+    border-right: 3px solid rgb(148, 182, 137);
+    border-bottom: 3px solid rgb(54, 73, 62);
     border-radius: 1rem;
     box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
 }
@@ -138,4 +138,8 @@ button {
 
 .span8 {
     background-color: #007fa4;
+}
+
+.op {
+    filter: brightness(0.85);
 }
