@@ -1,3 +1,6 @@
+// Hey stranger! Caution, if you are a TOP learner, DO NOT ATTEMPT TO EMULATE THIS CODE.
+// There are WAY easier ways to complete the assignment, I promise.
+
 const hook = document.querySelector("#hook");
 const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
@@ -7,7 +10,7 @@ const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]
 const DEL = {symbol: "←", id:"backspace", value: null, code: ["Backspace", "Delete"]}
 const MUL = {symbol:"*", id: "multiply", value: null, code: ["NumpadMultiply"]};
 const SUB = {symbol: "—", id: "subtract", value: null, code: ["Minus", "NumpadSubtract"]};
-const DIV = {symbol: "/", id: "divide", value: null, code: ["Slash", "NumpadDivide"]};
+const DIV = {symbol: "÷", id: "divide", value: null, code: ["Slash", "NumpadDivide"]};
 const EXP = {symbol: "^", id: "exponent", value: null, code: [""]};
 const NEG = {symbol: "±", id: "signflip", value: null, code: [""]};
 const ADD = {symbol: "+", id: "add", value: null, code: ["NumpadAdd"]};
@@ -304,9 +307,7 @@ function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
 }
 
-
-console.log(EQUAL.code[0]);
-console.log(EQUAL.code[1]);
+// KEYPRESS HANDLING
 
 document.addEventListener("keyup", (e) => handleKeypress(e));
 
