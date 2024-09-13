@@ -147,9 +147,14 @@ function assembleOperand(pressed) {
     if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) return;
     if(pressed === DEC) {
         if(DISPLAY.bottomtext.indexOf(".") !== -1) return;
-        else {
+        if(!DISPLAY.bottomtext) {
+            DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
+            refresh();
+            return;
+        } else {
             if(DISPLAY.bottomtext.length === 0) {
-                DISPLAY.bottomtext += ZERO.value + pressed.value;                
+                DISPLAY.bottomtext += ZERO.value + pressed.value;
+                refresh();                
                 return;
             }
         }
