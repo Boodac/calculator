@@ -196,7 +196,7 @@ function update(pressed){
         DISPLAY.currSign = pressed.symbol;
     }
     else {
-        DISPLAY.toptext = operate(pressed, DISPLAY.toptext, DISPLAY.bottomtext);
+        DISPLAY.toptext = operate(pressed, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
     }    
     refresh();
@@ -238,7 +238,7 @@ function operate(operator, firstOperand, secondOperand) {
             return sub(firstOperand, secondOperand);
             break;
         case DIV:
-            return div(firstOperand, secondOperand);
+            return div(secondOperand, firstOperand);
             break;
         case MUL:
             return mul(firstOperand, secondOperand);
@@ -254,7 +254,7 @@ function add(first, second){
 }
 
 function sub(first, second){
-    return Number(second) - Number(first);
+    return Number(first) - Number(second);
 }
 
 function mul(first, second){
@@ -262,7 +262,7 @@ function mul(first, second){
 }
 
 function div(first, second){
-    return Number(second) / Number(first);
+    return Number(first) / Number(second);
 }
 
 function exp(operand, exponent){
