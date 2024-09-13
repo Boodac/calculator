@@ -190,6 +190,7 @@ function update(pressed){
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
     if(pressed === EQUAL) { equalOut(pressed); refresh(); return; }
+    if(!DISPLAY.bottomtext) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
     if(globalLastOp !== {} && !DISPLAY.toptext) { 
         globalLastOp = pressed;
         DISPLAY.currSign = pressed.symbol;
@@ -197,7 +198,6 @@ function update(pressed){
         DISPLAY.bottomtext = ""; 
         refresh(); return; 
     }
-    if(!DISPLAY.bottomtext) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
     if(DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) equalOut(pressed);
     refresh();
 }
@@ -220,11 +220,11 @@ function equalOut(pressed) {
         DISPLAY.currSign = pressed.symbol;
     }
     else {
-        DISPLAY.toptext = operate(pressed, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = "";
     }
-    if(pressed===EQUAL) { globalLastOp = {}; DISPLAY.currSign = ""; }
+    if(pressed===EQUAL) { DISPLAY.currSign = ""; }
     else globalLastOp = pressed;
     return;
 }
