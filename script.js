@@ -186,7 +186,7 @@ function error() {
 function update(pressed){
     if(pressed === DEL) { backspace(); return; }
     if(pressed === CLEAR) { reset(); return; }
-    if(errFlag) { reset(); errFlag = 0; };
+    if(errFlag) { reset(); errFlag = 0; refresh(); return; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
     if(pressed === EQUAL) { equalOut(pressed); refresh(); return; }
