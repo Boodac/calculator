@@ -1,9 +1,10 @@
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
+const NEGATIVE = "-";
 const EQUAL = {symbol: "=", id: "equal", value: null};
 const CLEAR = {symbol:"AC", id:"allclear", value: null};
 const DEL = {symbol: "←", id:"backspace", value: null}
 const MUL = {symbol:"*", id: "multiply", value: null};
-const SUB = {symbol: "-", id: "subtract", value: null};
+const SUB = {symbol: "—", id: "subtract", value: null};
 const DIV = {symbol: "/", id: "divide", value: null};
 const EXP = {symbol: "^", id: "exponent", value: null};
 const NEG = {symbol: "±", id: "signflip", value: null};
@@ -106,39 +107,46 @@ b_exp.addEventListener("click", (e) => update(EXP));
 const d_top = document.getElementById("opDisplay");
 const d_bot = document.getElementById("currDisplay");
 const d_negation = document.getElementById("negation");
+d_negation.toggle = function () {
+    if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
+    else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
+    else if(DISPLAY.toptext && !DISPLAY.bottomtext) {
+        if(DISPLAY.toptext.charAt(0) === NEGATIVE) {
+            DISPLAY.toptext = DISPLAY.toptext.substring(1);
+        }
+        else DISPLAY.toptext = NEGATIVE + DISPLAY.toptext;
+    }    
+    else if(DISPLAY.toptext && DISPLAY.bottomtext) {
+        if(DISPLAY.bottomtext.charAt(0) === NEGATIVE) {
+            DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
+        }
+        else DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
+    }
+}
+d_negation.isHidden = function () {
+    return d_negation.style.visibility === "hidden";
+}
 const d_currOp = document.getElementById("currOp");
 d_negation.textContent = DISPLAY.negation;
 d_negation.style.visibility = "hidden";
-let isNegative = 0;
 
-/** PROGRAM LOGIC  */
+// INITIATE MAIN PROGRAM
 
-refresh();
+refresh(); // lol
 
-//DISPLAY FUNCTIONS
+// DISPLAY FUNCTIONS
 
 function refresh(){
-    //this handles any leading zeros.
-    for(let i = 0; i < DISPLAY.bottomtext.split("").length;i++){
-        if(DISPLAY.bottomtext.split("")[0] === "0" && 
-            DISPLAY.bottomtext.split("")[1] && 
-            DISPLAY.bottomtext.split("")[1] !== "."){
-                DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
-        }
-        else break;
-    }
-    d_top.textContent=DISPLAY.toptext;
-    d_bot.textContent=DISPLAY.bottomtext;
-    d_currOp.textContent=DISPLAY.currSign;
+    d_top.textContent = DISPLAY.toptext;
+    d_bot.textContent = DISPLAY.bottomtext;
+    d_currOp.textContent = DISPLAY.currSign;
 }
 
-function assembleOperand(pressed) { 
+function assembleOperand(pressed) {
     if(DISPLAY.bottomtext.length > 28) return;
-    if(pressed.id === "decimal") {
-        if(DISPLAY.bottomtext.indexOf(".") !== -1) {
-            console.error("Decimal key pressed. Ignored as there is already a floating point.")
-            return;
-        }
+    if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) return;
+    if(pressed === DEC) {
+        if(DISPLAY.bottomtext.indexOf(".") !== -1) return;
         else {
             if(DISPLAY.bottomtext.length === 0) {
                 DISPLAY.bottomtext += ZERO.value + pressed.value;                
@@ -153,60 +161,75 @@ function assembleOperand(pressed) {
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    if(pressed.value !== null){
-        console.log(pressed);
-        assembleOperand(pressed);
-    };
-    if(pressed.value === null && DISPLAY.bottomtext === "") {
-        if(pressed.id === NEG.id) {
-            DISPLAY.bottomtext = "0";
-        }
-    }
-    switch(pressed.id) {
-        case ADD.id:
-            DISPLAY.toptext = operate(ADD, DISPLAY.toptext, DISPLAY.bottomtext);
-            DISPLAY.bottomtext = "";
-            DISPLAY.currSign = ADD.symbol;
-            refresh();
-            break;
-        case MUL.id:
-            break;
-        case SUB.id:
-            break;
-        case DEL.id:
-            DISPLAY.bottomtext = DISPLAY.bottomtext.slice(0, -1);
-            break;
-        case CLEAR.id:
-            DISPLAY.toptext = '';
-            DISPLAY.bottomtext = '';
-            isNegative = 0;
-            d_negation.style.visibility = "hidden";
-            globalLastOp = {};
-            break;
-        case EQUAL.id:
-            break;
-        case DIV.id:
-            break;
-        case EXP.id:
-            break;
-        case NEG.id:
-            if(isNegative === 0) {
-                isNegative = 1;
-                d_negation.style.visibility = "visible";
+    if(pressed.value !== null) { assembleOperand(pressed); return; }
+    if(pressed === CLEAR) { reset(); return; }
+    if(pressed === DEL) { backspace(); return; }
+    if(pressed === EQUAL) {
+        if (!DISPLAY.toptext) {
+            if(!d_negation.isHidden()) {
+                DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
+                d_negation.toggle();
             }
-            else {
-                isNegative = 0;
-                d_negation.style.visibility = "hidden";
-            } 
-            break;
+            DISPLAY.toptext = DISPLAY.bottomtext;
+            DISPLAY.bottomtext = "";
+        }
+        else {
+            DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+            DISPLAY.bottomtext = "";
+            DISPLAY.currSign = "";
+        }
+        globalLastOp = {};
+        refresh(); return;
     }
+    if(pressed === NEG) {
+        d_negation.toggle();
+        refresh(); 
+        return;
+    }
+    DISPLAY.currSign = pressed.symbol;
     globalLastOp = pressed;
+    if(!DISPLAY.toptext) {
+        DISPLAY.toptext = DISPLAY.bottomtext;
+        DISPLAY.bottomtext = "";
+    }
+    else if(!DISPLAY.bottomtext) {
+        DISPLAY.currSign = pressed.symbol;
+    }
+    else {
+        DISPLAY.toptext = operate(pressed, DISPLAY.toptext, DISPLAY.bottomtext);
+        DISPLAY.bottomtext = "";
+    }    
+    refresh();
+}
+
+function reset() {
+    DISPLAY.toptext = '';
+    DISPLAY.bottomtext = '';
+    DISPLAY.currSign = CLEAR.message;
+    isNegative = 0;
+    d_negation.style.visibility = "hidden";
+    globalLastOp = {};
+    refresh();
+}
+
+function backspace() {
+    if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
+        DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
+        reset(); return; 
+    }
+    if(DISPLAY.bottomtext) DISPLAY.bottomtext = DISPLAY.bottomtext.slice(0, -1);
+    else if(DISPLAY.currSign) {
+        DISPLAY.currSign = "";
+        DISPLAY.bottomtext = DISPLAY.toptext;
+        DISPLAY.toptext = "";
+    }
+    else if(DISPLAY.toptext) DISPLAY.toptext = String(DISPLAY.toptext.slice(0, -1));
     refresh();
 }
 
 // MATH FUNCTIONS
 
-function operate(operator, secondOperand, firstOperand = 0) {
+function operate(operator, firstOperand, secondOperand) {
     switch(operator) {
         case ADD:
             return add(firstOperand, secondOperand);
@@ -231,17 +254,17 @@ function add(first, second){
 }
 
 function sub(first, second){
-    return first - second;
+    return Number(second) - Number(first);
 }
 
 function mul(first, second){
-    return first * second;
+    return Number(first) * Number(second);
 }
 
 function div(first, second){
-    return first / second;
+    return Number(second) / Number(first);
 }
 
 function exp(operand, exponent){
-    return operand ** exponent;
+    return Number(operand) ** Number(exponent);
 }
