@@ -1,4 +1,4 @@
-const body = document.querySelector("body");
+const hook = document.querySelector("#hook");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
 const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "Enter", "Space", "NumpadEnter"]};
@@ -140,7 +140,6 @@ refresh(); // lol
 // DISPLAY FUNCTIONS
 
 function refresh(){
-    console.log("Refreshing the screen.");
     d_top.textContent = DISPLAY.toptext;
     d_bot.textContent = DISPLAY.bottomtext;
     d_currOp.textContent = DISPLAY.currSign;
@@ -166,24 +165,14 @@ function assembleOperand(pressed) {
     refresh();
 }
 
-DISPLAY.isZero = function () {
-    console.log(DISPLAY.bottomtext);
-    console.log(DISPLAY.toptext);
-    console.log(DISPLAY.currSign);
-    if(DISPLAY.bottomtext == "") return false;
-    if(DISPLAY.bottomtext[0] !== 0) return false;
-    if(DISPLAY.bottomtext[1] === DEC.symbol && !DISPLAY.bottomtext[2]) {
-        DISPLAY.bottomtext = ZERO.symbol;
-        return true;
-    }
+DISPLAY.isError = function (pressed) {
+    if(DISPLAY.bottomtext !== "" && (DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.")) return true;
+    if(DISPLAY.toptext !== "" && DISPLAY.bottomtext !== "" && DISPLAY.currSign === "") return true;
+    if(DISPLAY.currSign !== DIV && globalLastOp === DIV && (DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.")) return true;
     return false;
 }
 
 function error() {
-    console.log("Bottom" + DISPLAY.bottomtext);
-    console.log("Toptext:" + DISPLAY.toptext);
-    console.log("Currsign:" + DISPLAY.currSign);
-    console.error("ALERT!");
     DISPLAY.toptext = "HOW MUCH TIME";
     DISPLAY.bottomtext = "DO YOU HAVE?";
     DISPLAY.currSign = "";
@@ -195,35 +184,26 @@ function error() {
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    if(pressed === CLEAR) { reset(); return; }
-    if(errFlag) { reset(); errFlag = 0; }
     if(pressed === DEL) { backspace(); return; }
-    if(errFlag == 1) { reset(); return; }
+    if(pressed === CLEAR) { reset(); return; }
+    if(errFlag) { reset(); errFlag = 0; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); refresh(); return; }
-    if(pressed === EQUAL) { 
-        if(globalLastOp === DIV && DISPLAY.isZero) {
-            error(); return;
-        }
-        equalOut(); refresh(); return; }
-    if(globalLastOp !== {}) { DISPLAY.currSign = pressed.Symbol; equalOut(); }
-    
-    if(!DISPLAY.toptext){
+    if(pressed === EQUAL) { equalOut(pressed); refresh(); return; }
+    if(globalLastOp !== {} && !DISPLAY.toptext) { 
+        globalLastOp = pressed;
+        DISPLAY.currSign = pressed.symbol;
         DISPLAY.toptext = DISPLAY.bottomtext;
-        DISPLAY.bottomtext = "";
+        DISPLAY.bottomtext = ""; 
+        refresh(); return; 
     }
-    else if(!DISPLAY.bottomtext) {
-        DISPLAY.currSign = pressed.symbol;
-    } else {
-        DISPLAY.currSign = pressed.symbol;
-        equalOut(globalLastOp);
-        DISPLAY.currSign = pressed.symbol;
-    }
-    globalLastOp = pressed;
+    if(!DISPLAY.bottomtext) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
+    if(DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) equalOut(pressed);
     refresh();
 }
 
 function equalOut(pressed) { 
+    if(DISPLAY.isError()) {error(); return;}
     if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
     if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
     if (!DISPLAY.toptext) {
@@ -234,19 +214,25 @@ function equalOut(pressed) {
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = "";
     }
-    else {
+    else if (DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) {
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.bottomtext = "";
+        DISPLAY.currSign = pressed.symbol;
+    }
+    else {
+        DISPLAY.toptext = operate(pressed, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = "";
     }
-    globalLastOp = {};
+    if(pressed===EQUAL) { globalLastOp = {}; DISPLAY.currSign = ""; }
+    else globalLastOp = pressed;
     return;
 }
 
 function reset() {
     DISPLAY.toptext = '';
     DISPLAY.bottomtext = '';
-    DISPLAY.currSign = CLEAR.message;
+    DISPLAY.currSign = "";
     d_negation.style.visibility = "hidden";
     globalLastOp = {};
     refresh();
@@ -312,7 +298,7 @@ function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
 }
 
-body.addEventListener("keyup", (e) => handleKeypress(e));
+hook.addEventListener("keyup", (e) => handleKeypress(e));
 
 function handleKeypress(event) {
     switch(event.code) {

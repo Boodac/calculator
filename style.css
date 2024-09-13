@@ -49,3 +49,8 @@ button {
     border: 1px solid black;
     border-radius: 0.5rem;
 }
+
+#hook {
+    width: 0;
+    height: 0;
+}
