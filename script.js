@@ -3,7 +3,6 @@
 // That said, there's some neat stuff in here, if you can follow along. Enjoy!
 
 const marquee = document.getElementById("marquee");
-const body = document.querySelector("body");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
 const NEGATIVE = "-";
 const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "NumpadEnter"]};
@@ -206,7 +205,7 @@ function error() {
 
 function update(pressed){
     console.log("Update function running.");
-    marquee.textContent = "Operating...";
+    marquee.textContent = "Executing...";
     if(pressed === DEL) { backspace(); return; }
     if(pressed === CLEAR) { reset(); return; }
     if(errFlag) { reset(); errFlag = 0; refresh(); return; };
@@ -269,7 +268,7 @@ function reset() {
 
 function backspace() {
     if(errFlag) {
-        console.error ("Yeah nah, it's messed up. Resetting instead!");
+        console.error ("Nah, it's messed up. Resetting instead!");
         reset(); return;
     }
     if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
