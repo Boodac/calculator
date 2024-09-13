@@ -21,7 +21,8 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    height: 4rem;
+    height: 2.5rem;
+    border: 1px solid black;
 }
 
 #bottomline, #topline {
