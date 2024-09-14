@@ -211,7 +211,7 @@ function update(pressed){
     if(pressed === EQUAL) { equalOut(); return; } // equals sign
     if((DISPLAY.toptext || DISPLAY.toptext === 0) && 
         (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && 
-        DISPLAY.currSign) { // this causes calculations when you use an operator as an equals sign
+        DISPLAY.currSign) { // this triggers a calculation when you use a new operator as an equals sign for a previous operation
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = pressed.symbol;
@@ -223,7 +223,7 @@ function update(pressed){
         if(pressed !== EQUAL) DISPLAY.currSign = pressed.symbol; 
         DISPLAY.bottomtext = "";
     }
-    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { // this is changing operators
+    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { // this is changing operators when all else has failed
         DISPLAY.currSign = pressed.symbol; globalLastOp = pressed; 
     }
     refresh();
