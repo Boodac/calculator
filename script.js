@@ -28,7 +28,7 @@ let globalLastOp = {};
 let errFlag = 0;
 
 DISPLAY.isError = function () {
-    if(DISPLAY.toptext === NaN) return true;
+    if(Number.isNaN(DISPLAY.toptext)) return true;
     if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) return true;
     else if (DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return true;
     else return false;
@@ -153,7 +153,7 @@ function assembleOperand(pressed) {
     if(DISPLAY.bottomtext.length > 28) { 
         marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
         return; }
-    if(DISPLAY.toptext && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && !DISPLAY.currSign) {
+    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && !DISPLAY.currSign) {
         marquee.textContent = "I'm pretty sure you want an operator here...";
         return; }
     if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) {
@@ -230,8 +230,8 @@ function update(pressed){
 }
 
 function equalOut() { 
-    if(DISPLAY.toptext && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) return;
-    if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
+    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) return;
+    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (DISPLAY.bottomtext || DISPLAY.bottomtext == 0) && !DISPLAY.currSign) return;
     if ((!DISPLAY.toptext && DISPLAY.toptext !== 0)) {
         if(d_negation.isShown()) {
             DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
@@ -240,7 +240,7 @@ function equalOut() {
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = "";
     }
-    else if (DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) {
+    else if((DISPLAY.toptext || DISPLAY.toptext === 0) && (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && DISPLAY.currSign) {
         DISPLAY.currSign = "";
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
