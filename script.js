@@ -1,4 +1,4 @@
-// Hey stranger!  Current version: v0.31
+// Hey stranger!  Current version: v0.32
 
 const marquee = document.getElementById("marquee");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:"", isError : '' };
