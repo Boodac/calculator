@@ -129,7 +129,7 @@ d_negation.toggle = function () {
             DISPLAY.toptext = DISPLAY.toptext.substring(1);
         }
         else DISPLAY.toptext = NEGATIVE + DISPLAY.toptext;
-    }    
+    }
     else if(DISPLAY.toptext && DISPLAY.bottomtext) {
         if(DISPLAY.bottomtext.charAt(0) === NEGATIVE) {
             DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
@@ -208,22 +208,22 @@ function update(pressed){
     if(pressed.value !== null) { assembleOperand(pressed); return; } // if 0-9 or a decimal, populate the display
     if(pressed === NEG) { d_negation.toggle(); return; } // allow user to toggle negation with a blank screen
     if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && (!DISPLAY.toptext && DISPLAY.toptext !== 0)) return; // operators don't work until the display is populated
-    if(pressed === EQUAL) { equalOut(); return; }
+    if(pressed === EQUAL) { equalOut(); return; } // equals sign
     if((DISPLAY.toptext || DISPLAY.toptext === 0) && 
         (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && 
-        DISPLAY.currSign) {
+        DISPLAY.currSign) { // this causes calculations when you use an operator as an equals sign
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = pressed.symbol;
         globalLastOp = pressed;
     }
-    if(!DISPLAY.toptext && DISPLAY.toptext !== 0) {   
+    if(!DISPLAY.toptext && DISPLAY.toptext !== 0) { // this handles the first operation pressed
         if(negation.isShown()) { DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext; negation.toggle(); }
         DISPLAY.toptext = DISPLAY.bottomtext; 
         if(pressed !== EQUAL) DISPLAY.currSign = pressed.symbol; 
         DISPLAY.bottomtext = "";
     }
-    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { 
+    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { // this is changing operators
         DISPLAY.currSign = pressed.symbol; globalLastOp = pressed; 
     }
     refresh();
