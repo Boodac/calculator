@@ -1,9 +1,7 @@
-// Hey stranger! Caution, if you are a TOP learner, DO NOT ATTEMPT TO EMULATE THIS CODE.
-// There are WAY easier ways to complete the assignment, I promise.
-// That said, there's some neat stuff in here, if you can follow along. Enjoy!
+// Hey stranger! 
 
 const marquee = document.getElementById("marquee");
-const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:""};
+const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:"", isError : '' };
 const NEGATIVE = "-";
 const EQUAL = {symbol: "=", id: "equal", value: null, code: ["Equal", "NumpadEnter"]};
 const CLEAR = {symbol:"AC", id:"allclear", value: null, code: ["KeyC", "Escape"]};
@@ -143,18 +141,6 @@ refresh(); // lol
 
 // DISPLAY FUNCTIONS
 
-function refresh(){
-    d_top.textContent = DISPLAY.toptext;
-    d_bot.textContent = DISPLAY.bottomtext;
-    d_currOp.textContent = DISPLAY.currSign;
-    if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) marquee.textContent = "lol ... You may want to clear.";
-    // these are memes
-    if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
-    if(DISPLAY.toptext === "5318008") marquee.textContent = "Quick! Flip your screen!";
-    if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
-    // memes complete
-}
-
 function assembleOperand(pressed) {
     if(DISPLAY.bottomtext.length > 28) { 
         marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
@@ -186,11 +172,20 @@ function assembleOperand(pressed) {
 }
 
 DISPLAY.isError = function (pressed) {
-    if(pressed === DIV || globalLastOp === DIV) {
-        if(DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.") return true;
-    }
-    if(DISPLAY.toptext !== "" && DISPLAY.bottomtext !== "" && DISPLAY.currSign === "") return true;
-    return false;
+    if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) return true;
+    else if (DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return true;
+    else return false;
+}
+
+function refresh(){
+    d_top.textContent = DISPLAY.toptext;
+    d_bot.textContent = DISPLAY.bottomtext;
+    d_currOp.textContent = DISPLAY.currSign;
+    // these are memes
+    if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
+    if(DISPLAY.toptext === "5318008") marquee.textContent = "Quick! Flip your screen!";
+    if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
+    // memes complete
 }
 
 function error() {
@@ -206,7 +201,7 @@ function error() {
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    console.log("Update function running.");
+    if(DISPLAY.isError()) error();
     marquee.textContent = "Executing...";
     if(pressed === DEL) { backspace(); return; }
     if(pressed === CLEAR) { reset(); return; }
@@ -234,8 +229,6 @@ function update(pressed){
 }
 
 function equalOut(pressed) { 
-    console.log("Equal out running.");
-    if(DISPLAY.isError(pressed)) {error(); return;}
     if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
     if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
     if (!DISPLAY.toptext) {
@@ -247,16 +240,16 @@ function equalOut(pressed) {
         DISPLAY.bottomtext = "";
     }
     else if (DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) {
+        DISPLAY.currSign = pressed.symbol;
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
-        DISPLAY.currSign = pressed.symbol;
     }
     else {
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
         DISPLAY.currSign = "";
     }
-    if(pressed===EQUAL) DISPLAY.currSign = "";
+    if(pressed===EQUAL) { DISPLAY.currSign = ""; globalLastOp = {}; }
     else globalLastOp = pressed;
     return;
 }
@@ -295,24 +288,44 @@ function backspace() {
 // MATH FUNCTIONS
 
 function operate(operator, firstOperand, secondOperand) {
-    switch(operator) {
-        case ADD:
-            return add(firstOperand, secondOperand);
-        case SUB:
-            let precision = 0;
-            if(secondOperand.indexOf(".") !== -1) { 
-                return sub(secondOperand, firstOperand).toFixed(secondOperand.toString().split('.')[1].length);
-                // preserve floating points through subtraction
-            }
-            else return sub(secondOperand, firstOperand);
-        case DIV:
-            return div(secondOperand, firstOperand);
-        case MUL:
-            return mul(firstOperand, secondOperand);
-        case EXP:
-            return exp(secondOperand, firstOperand);
+    let expectedPrecision = 0;
+    if(firstOperand.toString().includes(DEC.symbol)) {
+        expectedPrecision = firstOperand.toString().split(DEC.symbol)[1].length;
+    }
+    if(secondOperand.toString().includes(DEC.symbol)) {
+        if(secondOperand.toString().split(DEC.symbol)[1].length > expectedPrecision){
+            expectedPrecision = secondOperand.toString().split(DEC.symbol)[1].length;
+        }
+    }
+    if(expectedPrecision > 0) {
+        switch(operator) {
+            case ADD:
+                return add(firstOperand, secondOperand).toFixed(expectedPrecision);
+            case SUB:
+                return sub(secondOperand, firstOperand).toFixed(expectedPrecision);
+            case DIV:
+                return div(secondOperand, firstOperand).toFixed(expectedPrecision);
+            case MUL:
+                return mul(firstOperand, secondOperand).toFixed(expectedPrecision);
+            case EXP:
+                return exp(secondOperand, firstOperand).toFixed(expectedPrecision);
+        }
+    } else {
+        switch(operator) {
+            case ADD:
+                return add(firstOperand, secondOperand);
+            case SUB:
+                return sub(secondOperand, firstOperand);
+            case DIV:
+                return div(secondOperand, firstOperand);
+            case MUL:
+                return mul(firstOperand, secondOperand);
+            case EXP:
+                return exp(secondOperand, firstOperand);
+        }
     }
 }
+
 
 function add(first, second){
     return Number(first) + Number(second);
@@ -333,13 +346,6 @@ function div(first, second){
 function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
 }
-
-function getPrecision(operand) {
-    operand = new Number(operand);
-    let precision = 1;
-
-    return precision;
-  }
 
 // KEYPRESS HANDLING
 
