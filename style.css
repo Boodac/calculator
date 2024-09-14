@@ -95,7 +95,7 @@ body {
 button {
     font-weight: 700;
     font-size: 1em;
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     padding: 1rem 3rem;
     border-top: 1px solid rgb(214, 241, 225);
     border-left: 1px solid rgb(186, 196, 190);
@@ -106,6 +106,7 @@ button {
     font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
     color: #ffefca;
+    line-height: 1em;
 }
 
 .span1{

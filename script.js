@@ -122,9 +122,9 @@ const d_negation = document.getElementById("negation");
 d_negation.textContent = DISPLAY.negation;
 d_negation.style.visibility = "hidden";
 d_negation.toggle = function () {
-    if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
-    else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
-    else if(DISPLAY.toptext && !DISPLAY.bottomtext) {
+    if((!DISPLAY.toptext && DISPLAY.toptext !== 0) && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
+    else if((!DISPLAY.toptext && DISPLAY.toptext !== 0) && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
+    else if(DISPLAY.toptext && (!DISPLAY.toptext && DISPLAY.bottomtext !== 0)) {
         if(DISPLAY.toptext.toString().charAt(0) === NEGATIVE) {
             DISPLAY.toptext = DISPLAY.toptext.substring(1);
         }
@@ -153,7 +153,7 @@ function assembleOperand(pressed) {
     if(DISPLAY.bottomtext.length > 28) { 
         marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
         return; }
-    if(DISPLAY.toptext && !DISPLAY.bottomtext && !DISPLAY.currSign) {
+    if(DISPLAY.toptext && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && !DISPLAY.currSign) {
         marquee.textContent = "I'm pretty sure you want an operator here...";
         return; }
     if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) {
@@ -163,7 +163,7 @@ function assembleOperand(pressed) {
         if(DISPLAY.bottomtext.indexOf(".") !== -1) { 
             marquee.textContent = "Are you trying to type in an IP address or something?";
             return; }
-        if(!DISPLAY.bottomtext) {
+        if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) {
             marquee.textContent = "Floating points, eh? Well, alright...";
             DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
             refresh(); return;
@@ -202,35 +202,38 @@ function error() {
 
 function update(pressed){
     marquee.textContent = "Executing...";
-    if(pressed === DEL) { backspace(); return; }
-    if(pressed === CLEAR) { reset(); refresh(); return; }
-    if(errFlag) { reset(); errFlag = 0; refresh(); return; };
-    if(pressed.value !== null) { assembleOperand(pressed); return; }
-    if(pressed === NEG) { d_negation.toggle(); return; }
-    if(pressed === EQUAL) {
-        if(!DISPLAY.toptext) { DISPLAY.toptext = DISPLAY.bottomtext; DISPLAY.bottomtext = ""; refresh(); return;} 
-        else { equalOut(pressed); refresh(); return; }
-    }
-    if(!DISPLAY.bottomtext && !DISPLAY.toptext) return;
-    if(!DISPLAY.bottomtext && (DISPLAY.toptext || DISPLAY.currSign)) { 
-        DISPLAY.currSign = pressed.symbol; 
-        globalLastOp = pressed; 
-        refresh(); return; }
-    if(globalLastOp !== {} && !DISPLAY.toptext) { 
-        globalLastOp = pressed;
+    if(pressed === DEL) { backspace(); return; } // grab the backspace key
+    if(pressed === CLEAR) { reset(); refresh(); return; } // grab the AC key
+    if(errFlag) { reset(); errFlag = 0; refresh(); return; }; // break display on infinity
+    if(pressed.value !== null) { assembleOperand(pressed); return; } // if 0-9 or a decimal, populate the display
+    if(pressed === NEG) { d_negation.toggle(); return; } // allow user to toggle negation with a blank screen
+    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && (!DISPLAY.toptext && DISPLAY.toptext !== 0)) return; // operators don't work until the display is populated
+    if(pressed === EQUAL) { equalOut(); return; }
+    if((DISPLAY.toptext || DISPLAY.toptext === 0) && 
+        (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && 
+        DISPLAY.currSign) {
+        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.bottomtext = "";
         DISPLAY.currSign = pressed.symbol;
-        DISPLAY.toptext = DISPLAY.bottomtext;
-        DISPLAY.bottomtext = ""; 
-        equalOut(); refresh(); return; 
+        globalLastOp = pressed;
     }
-    if(DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) equalOut(pressed);
+    if(!DISPLAY.toptext && DISPLAY.toptext !== 0) {   
+        if(negation.isShown()) { DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext; negation.toggle(); }
+        DISPLAY.toptext = DISPLAY.bottomtext; 
+        if(pressed !== EQUAL) DISPLAY.currSign = pressed.symbol; 
+        DISPLAY.bottomtext = "";
+    }
+    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { 
+        DISPLAY.currSign = pressed.symbol; globalLastOp = pressed; 
+    }
+
     refresh();
 }
 
-function equalOut(pressed) { 
-    if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
+function equalOut() { 
+    if(DISPLAY.toptext && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) return;
     if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
-    if (!DISPLAY.toptext) {
+    if ((!DISPLAY.toptext && DISPLAY.toptext !== 0)) {
         if(d_negation.isShown()) {
             DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
             d_negation.toggle();
@@ -239,21 +242,22 @@ function equalOut(pressed) {
         DISPLAY.bottomtext = "";
     }
     else if (DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) {
-        DISPLAY.currSign = pressed.symbol;
+        DISPLAY.currSign = "";
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
     }
     else {
         DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
         DISPLAY.bottomtext = "";
-        DISPLAY.currSign = "";
+        DISPLAY.currSign = globalLastOp.symbol;
     }
-    if(pressed===EQUAL) { DISPLAY.currSign = ""; globalLastOp = {}; }
-    else globalLastOp = pressed;
+    refresh();
     return;
 }
 
 function reset() {
+    console.clear();
+    console.log("All clear!");
     DISPLAY.toptext = '';
     DISPLAY.bottomtext = '';
     DISPLAY.currSign = "";
@@ -311,15 +315,15 @@ function operate(operator, firstOperand, secondOperand) {
     } else {
         switch(operator) {
             case ADD:
-                return add(firstOperand, secondOperand);
+                return add(Number(firstOperand), Number(secondOperand));
             case SUB:
-                return sub(secondOperand, firstOperand);
+                return sub(Number(secondOperand), Number(firstOperand));
             case DIV:
-                return div(secondOperand, firstOperand);
+                return div(Number(secondOperand), Number(firstOperand));
             case MUL:
-                return mul(firstOperand, secondOperand);
+                return mul(Number(firstOperand), Number(secondOperand));
             case EXP:
-                return exp(secondOperand, firstOperand);
+                return exp(Number(secondOperand), Number(firstOperand));
         }
     }
 }
