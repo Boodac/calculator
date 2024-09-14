@@ -268,7 +268,7 @@ function reset() {
 function backspace() {
     if(errFlag) {
         console.error ("Nah, it's messed up. Resetting instead!");
-        reset(); return;
+        reset(); errFlag=0; return;
     }
     if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
         DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
