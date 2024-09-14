@@ -271,7 +271,7 @@ function backspace() {
         reset(); errFlag=0; return;
     }
     if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
-        DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER) { 
+        DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER ) { 
         console.error("We're gonna assume you meant to clear it.");
         reset(); return; 
     }
