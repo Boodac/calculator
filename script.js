@@ -122,9 +122,9 @@ const d_negation = document.getElementById("negation");
 d_negation.textContent = DISPLAY.negation;
 d_negation.style.visibility = "hidden";
 d_negation.toggle = function () {
-    if((!DISPLAY.toptext && DISPLAY.toptext !== 0) && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
-    else if((!DISPLAY.toptext && DISPLAY.toptext !== 0) && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
-    else if(DISPLAY.toptext && (!DISPLAY.toptext && DISPLAY.bottomtext !== 0)) {
+    if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
+    else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
+    else if(DISPLAY.toptext && !DISPLAY.bottomtext) {
         if(DISPLAY.toptext.toString().charAt(0) === NEGATIVE) {
             DISPLAY.toptext = DISPLAY.toptext.substring(1);
         }
@@ -226,7 +226,6 @@ function update(pressed){
     if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { 
         DISPLAY.currSign = pressed.symbol; globalLastOp = pressed; 
     }
-
     refresh();
 }
 
