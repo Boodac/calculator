@@ -113,6 +113,8 @@ b_exp.addEventListener("click", (e) => update(EXP));
 const d_top = document.getElementById("opDisplay");
 const d_bot = document.getElementById("currDisplay");
 const d_negation = document.getElementById("negation");
+d_negation.textContent = DISPLAY.negation;
+d_negation.style.visibility = "hidden";
 d_negation.toggle = function () {
     if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
     else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
@@ -134,8 +136,6 @@ d_negation.isShown = function () {
     return d_negation.style.visibility === "visible";
 }
 const d_currOp = document.getElementById("currOp");
-d_negation.textContent = DISPLAY.negation;
-d_negation.style.visibility = "hidden";
 
 // INITIATE MAIN PROGRAM
 
@@ -186,7 +186,9 @@ function assembleOperand(pressed) {
 }
 
 DISPLAY.isError = function (pressed) {
-    if(DISPLAY.bottomtext !== "" && (DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.")) return true;
+    if(pressed === DIV || globalLastOp === DIV) {
+        if(DISPLAY.bottomtext == 0 || DISPLAY.bottomtext == "0.") return true;
+    }
     if(DISPLAY.toptext !== "" && DISPLAY.bottomtext !== "" && DISPLAY.currSign === "") return true;
     return false;
 }
@@ -216,13 +218,16 @@ function update(pressed){
         else { equalOut(pressed); refresh(); return; }
     }
     if(!DISPLAY.bottomtext && !DISPLAY.toptext) return;
-    if(!DISPLAY.bottomtext && (DISPLAY.toptext || DISPLAY.currSign)) { DISPLAY.currSign = pressed.symbol; refresh(); return; }
+    if(!DISPLAY.bottomtext && (DISPLAY.toptext || DISPLAY.currSign)) { 
+        DISPLAY.currSign = pressed.symbol; 
+        globalLastOp = pressed; 
+        refresh(); return; }
     if(globalLastOp !== {} && !DISPLAY.toptext) { 
         globalLastOp = pressed;
         DISPLAY.currSign = pressed.symbol;
         DISPLAY.toptext = DISPLAY.bottomtext;
         DISPLAY.bottomtext = ""; 
-        refresh(); return; 
+        equalOut(); refresh(); return; 
     }
     if(DISPLAY.toptext && DISPLAY.bottomtext && DISPLAY.currSign) equalOut(pressed);
     refresh();
@@ -230,7 +235,7 @@ function update(pressed){
 
 function equalOut(pressed) { 
     console.log("Equal out running.");
-    if(DISPLAY.isError()) {error(); return;}
+    if(DISPLAY.isError(pressed)) {error(); return;}
     if(DISPLAY.toptext && !DISPLAY.bottomtext) return;
     if(DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return;
     if (!DISPLAY.toptext) {
@@ -293,19 +298,19 @@ function operate(operator, firstOperand, secondOperand) {
     switch(operator) {
         case ADD:
             return add(firstOperand, secondOperand);
-            break;
         case SUB:
-            return sub(secondOperand, firstOperand);
-            break;
+            let precision = 0;
+            if(secondOperand.indexOf(".") !== -1) { 
+                return sub(secondOperand, firstOperand).toFixed(secondOperand.toString().split('.')[1].length);
+                // preserve floating points through subtraction
+            }
+            else return sub(secondOperand, firstOperand);
         case DIV:
             return div(secondOperand, firstOperand);
-            break;
         case MUL:
             return mul(firstOperand, secondOperand);
-            break;
         case EXP:
             return exp(secondOperand, firstOperand);
-            break;
     }
 }
 
@@ -328,6 +333,13 @@ function div(first, second){
 function exp(operand, exponent){
     return Number(operand) ** Number(exponent);
 }
+
+function getPrecision(operand) {
+    operand = new Number(operand);
+    let precision = 1;
+
+    return precision;
+  }
 
 // KEYPRESS HANDLING
 
