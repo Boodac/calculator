@@ -150,7 +150,7 @@ refresh(); // lol
 // DISPLAY FUNCTIONS
 
 function assembleOperand(pressed) {
-    if(DISPLAY.bottomtext.length > 28) { 
+    if(DISPLAY.bottomtext.length > 20) { 
         marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
         return; }
     if((DISPLAY.toptext || DISPLAY.toptext === 0) && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && !DISPLAY.currSign) {
