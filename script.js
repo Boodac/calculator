@@ -24,7 +24,15 @@ const EIGHT = {symbol: "8", id: "8", value: 8, code: ["Digit8", "Numpad8"]};
 const NINE = {symbol: "9", id: "9", value: 9, code: ["Digit9", "Numpad9"]};
 const ZERO = {symbol: "0", id: "0", value: 0, code: ["Digit0", "Numpad0"]};
 let globalLastOp = {};
+
 let errFlag = 0;
+
+DISPLAY.isError = function () {
+    if(DISPLAY.toptext === NaN) return true;
+    if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) return true;
+    else if (DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return true;
+    else return false;
+}
 
 // b_ constants for buttons
 const b_1 = document.getElementById(ONE.id);
@@ -171,16 +179,11 @@ function assembleOperand(pressed) {
     refresh();
 }
 
-DISPLAY.isError = function (pressed) {
-    if(DISPLAY.toptext > Number.MAX_SAFE_INTEGER) return true;
-    else if (DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return true;
-    else return false;
-}
-
 function refresh(){
     d_top.textContent = DISPLAY.toptext;
     d_bot.textContent = DISPLAY.bottomtext;
     d_currOp.textContent = DISPLAY.currSign;
+    if(DISPLAY.isError()) error();
     // these are memes
     if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
     if(DISPLAY.toptext === "5318008") marquee.textContent = "Quick! Flip your screen!";
@@ -189,22 +192,18 @@ function refresh(){
 }
 
 function error() {
-    DISPLAY.toptext = "HOW MUCH TIME";
-    DISPLAY.bottomtext = "DO YOU HAVE?";
-    DISPLAY.currSign = "";
-    globalLastOp = {};
     errFlag = 1;
+    d_top.textContent = "HOW MUCH TIME";
+    d_bot.textContent = "DO YOU HAVE?";
     marquee.textContent = "Uh oh! Press any key to reset.";
-    refresh();
 }
 
 //BUTTON FUNCTIONS
 
 function update(pressed){
-    if(DISPLAY.isError()) error();
     marquee.textContent = "Executing...";
     if(pressed === DEL) { backspace(); return; }
-    if(pressed === CLEAR) { reset(); return; }
+    if(pressed === CLEAR) { reset(); refresh(); return; }
     if(errFlag) { reset(); errFlag = 0; refresh(); return; };
     if(pressed.value !== null) { assembleOperand(pressed); return; }
     if(pressed === NEG) { d_negation.toggle(); return; }
@@ -261,7 +260,6 @@ function reset() {
     d_negation.style.visibility = "hidden";
     globalLastOp = {};
     marquee.textContent = "All Clear! Enter a number to continue.";
-    refresh();
 }
 
 function backspace() {
