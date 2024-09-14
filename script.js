@@ -1,4 +1,4 @@
-// Hey stranger! 
+// Hey stranger!  Current version: v0.31
 
 const marquee = document.getElementById("marquee");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:"", isError : '' };
