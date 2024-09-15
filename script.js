@@ -1,4 +1,7 @@
-// Hey stranger!  Current version: v0.32
+// Hey stranger!  Current version:
+const CURR_VER = "v1.00";
+const attribution = document.getElementById("attribution");
+attribution.textContent = "boodaCalc " + CURR_VER + ", by boodaC";
 
 const marquee = document.getElementById("marquee");
 const DISPLAY = { currSign:"",negation:"—", toptext:"", bottomtext:"", isError : '' };
@@ -24,8 +27,29 @@ const EIGHT = {symbol: "8", id: "8", value: 8, code: ["Digit8", "Numpad8"]};
 const NINE = {symbol: "9", id: "9", value: 9, code: ["Digit9", "Numpad9"]};
 const ZERO = {symbol: "0", id: "0", value: 0, code: ["Digit0", "Numpad0"]};
 let globalLastOp = {};
-
 let errFlag = 0;
+
+// d_ constants for display elements, these will be set by refresh();
+const d_top = document.getElementById("opDisplay");
+const d_bot = document.getElementById("currDisplay");
+const d_negation = document.getElementById("negation");
+d_negation.textContent = DISPLAY.negation;
+d_negation.style.visibility = "hidden";
+const d_currOp = document.getElementById("currOp");
+
+// DISPLAY FUNCTIONS
+
+function refresh(){
+    d_top.textContent = DISPLAY.toptext;
+    d_bot.textContent = DISPLAY.bottomtext;
+    d_currOp.textContent = DISPLAY.currSign;
+    if(DISPLAY.isError()) error();
+    // these are memes
+    if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
+    if(DISPLAY.toptext === "5318008") marquee.textContent = "Quick! Flip your screen!";
+    if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
+    // memes complete
+}
 
 DISPLAY.isError = function () {
     if(Number.isNaN(DISPLAY.toptext)) return true;
@@ -33,6 +57,219 @@ DISPLAY.isError = function () {
     else if (DISPLAY.toptext && DISPLAY.bottomtext && !DISPLAY.currSign) return true;
     else return false;
 }
+
+DISPLAY.topIsEmpty = function () {
+    return (!this.toptext && this.toptext !== 0);
+}
+
+DISPLAY.bottomIsEmpty = function () {
+    return (!this.bottomtext && this.bottomtext !==0);
+}
+
+d_negation.toggle = function () {
+    if(DISPLAY.topIsEmpty() && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
+    else if(DISPLAY.topIsEmpty() && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
+    else if(!DISPLAY.topIsEmpty() && DISPLAY.bottomIsEmpty()) {
+        if(DISPLAY.toptext.toString().charAt(0) === NEGATIVE) {
+            DISPLAY.toptext = DISPLAY.toptext.substring(1);
+        }
+        else DISPLAY.toptext = NEGATIVE + DISPLAY.toptext;
+    }
+    else if(!DISPLAY.topIsEmpty() && !DISPLAY.bottomIsEmpty()) {
+        if(DISPLAY.bottomtext.charAt(0) === NEGATIVE) {
+            DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
+        }
+        else DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
+    }
+    refresh();
+}
+
+d_negation.isShown = function () {
+    return this.style.visibility === "visible";
+}
+
+function assembleOperand(pressed) {
+    if(DISPLAY.bottomtext.length > 20) { 
+        marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
+        return; }
+    if(!DISPLAY.topIsEmpty() && DISPLAY.bottomIsEmpty() && !DISPLAY.currSign) {
+        marquee.textContent = "I'm pretty sure you want an operator here...";
+        return; }
+    if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) {
+        marquee.textContent = "I have no idea what you plan to do with that many zeroes.";
+        return; }
+    if(pressed === DEC) {
+        if(DISPLAY.bottomtext.toString().includes(DEC.symbol)) { 
+            marquee.textContent = "Are you trying to type in an IP address or something?";
+            return; }
+        if(DISPLAY.bottomIsEmpty()) {
+            marquee.textContent = "Floating points, eh? Well, alright...";
+            DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
+            refresh(); return;
+        } else {
+            if(DISPLAY.bottomtext.length === 0) {
+                DISPLAY.bottomtext += ZERO.value + pressed.value;
+                refresh(); return;
+            }
+        }
+    }
+    DISPLAY.bottomtext += pressed.value;
+    marquee.textContent = "Building...";
+    refresh();
+}
+
+function error() {
+    errFlag = 1;
+    d_top.textContent = "HOW MUCH TIME";
+    d_bot.textContent = "DO YOU HAVE?";
+    marquee.textContent = "Uh oh! Press any key to reset.";
+}
+
+//BUTTON FUNCTIONS
+
+function update(pressed){
+    marquee.textContent = "Executing...";
+    if(pressed === DEL) { backspace(); return; }
+    if(pressed === CLEAR) { reset(); refresh(); return; }
+    if(errFlag) { reset(); errFlag = 0; refresh(); return; }; // any key resets an error
+    if(pressed.value !== null) { assembleOperand(pressed); return; } // if 0-9 or a decimal, populate the display
+    if(pressed === NEG) { d_negation.toggle(); return; } // treat signflip separately from other operators
+    if(DISPLAY.bottomIsEmpty() && DISPLAY.topIsEmpty()) { return; } // operators don't work until the display is populated
+    if(pressed === EQUAL) { equalOut(); return; } // handle logic for the equals button
+    if(!DISPLAY.topIsEmpty() && !DISPLAY.bottomIsEmpty() && DISPLAY.currSign) { 
+        // this triggers a calculation when you use a new operator as an equals sign for a previous operation
+        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.bottomtext = "";
+        DISPLAY.currSign = pressed.symbol;
+        globalLastOp = pressed;
+    }
+    if(DISPLAY.topIsEmpty()) { // this handles the first operation pressed
+        if(negation.isShown()) { DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext; negation.toggle(); }
+        DISPLAY.toptext = DISPLAY.bottomtext; 
+        if(pressed !== EQUAL) DISPLAY.currSign = pressed.symbol;
+        globalLastOp = pressed; 
+        DISPLAY.bottomtext = "";
+    }
+    if(DISPLAY.bottomIsEmpty()) { // this is changing operators when all else has failed
+        DISPLAY.currSign = pressed.symbol; 
+        globalLastOp = pressed; 
+    }
+    refresh();
+}
+
+function equalOut() { 
+    if(!DISPLAY.topIsEmpty() && DISPLAY.bottomIsEmpty()) return; // nothing to compute
+    if(!DISPLAY.topIsEmpty() && !DISPLAY.bottomIsEmpty() && !DISPLAY.currSign) return; // nothing to compute
+    if (DISPLAY.topIsEmpty()) { // equals button will move a number to the top line
+        if(d_negation.isShown()) {
+            DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
+            d_negation.toggle();
+        }
+        DISPLAY.toptext = DISPLAY.bottomtext;
+        DISPLAY.bottomtext = "";
+    }
+    else if(!DISPLAY.topIsEmpty() && !DISPLAY.bottomIsEmpty() && DISPLAY.currSign) { // if there's a full operation
+        DISPLAY.currSign = "";
+        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
+        DISPLAY.bottomtext = "";
+    }
+    refresh();
+    return;
+}
+
+function reset() {
+    DISPLAY.toptext = '';
+    DISPLAY.bottomtext = '';
+    DISPLAY.currSign = "";
+    d_negation.style.visibility = "hidden";
+    globalLastOp = {};
+    marquee.textContent = "All Clear! Enter a number to continue.";
+}
+
+function backspace() {
+    if(errFlag) {
+        console.error ("Nah, it's messed up. Resetting instead!");
+        reset(); errFlag=0; return;
+    }
+    if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
+        DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER ) { 
+        console.error("We're gonna assume you meant to clear it.");
+        reset(); return; 
+    }
+    if(!DISPLAY.bottomIsEmpty()) DISPLAY.bottomtext = DISPLAY.bottomtext.toString().slice(0, -1);
+    else if(DISPLAY.currSign) {
+        DISPLAY.currSign = "";
+        DISPLAY.bottomtext = DISPLAY.toptext;
+        DISPLAY.toptext = "";
+    }
+    else if(!DISPLAY.topIsEmpty()) DISPLAY.toptext = DISPLAY.toptext.toString().slice(0, -1);
+    marquee.textContent = "Undoing...";
+    refresh();
+}
+
+// MATH FUNCTIONS
+
+function operate(operator, firstOperand, secondOperand) {
+    let expectedPrecision = 0;
+    if(firstOperand.toString().includes(DEC.symbol)) {
+        expectedPrecision = firstOperand.toString().split(DEC.symbol)[1].length;
+    }
+    if(secondOperand.toString().includes(DEC.symbol)) {
+        if(secondOperand.toString().split(DEC.symbol)[1].length > expectedPrecision){
+            expectedPrecision = secondOperand.toString().split(DEC.symbol)[1].length;
+        }
+    }
+    if(expectedPrecision > 0) {
+        switch(operator) {
+            case ADD:
+                return add(firstOperand, secondOperand).toFixed(expectedPrecision);
+            case SUB:
+                return sub(secondOperand, firstOperand).toFixed(expectedPrecision);
+            case DIV:
+                return div(secondOperand, firstOperand).toFixed(expectedPrecision);
+            case MUL:
+                return mul(firstOperand, secondOperand).toFixed(expectedPrecision);
+            case EXP:
+                return exp(secondOperand, firstOperand).toFixed(expectedPrecision);
+        }
+    } else {
+        switch(operator) {
+            case ADD:
+                return add(firstOperand, secondOperand);
+            case SUB:
+                return sub(secondOperand, firstOperand);
+            case DIV:
+                return div(secondOperand, firstOperand);
+            case MUL:
+                return mul(firstOperand, secondOperand);
+            case EXP:
+                return exp(secondOperand, firstOperand);
+        }
+    }
+}
+
+
+function add(first, second){
+    return Number(first) + Number(second);
+}
+
+function sub(first, second){
+    return Number(first) - Number(second);
+}
+
+function mul(first, second){
+    return Number(first) * Number(second);
+}
+
+function div(first, second){
+    return Number(first) / Number(second);
+}
+
+function exp(operand, exponent){
+    return Number(operand) ** Number(exponent);
+}
+
+// CLICK HANDLING
 
 // b_ constants for buttons
 const b_1 = document.getElementById(ONE.id);
@@ -115,239 +352,6 @@ const b_exp = document.getElementById(EXP.id);
 b_exp.textContent = EXP.symbol;
 b_exp.addEventListener("click", (e) => update(EXP));
 
-// d_ constants for display elements, these will be set by refresh();
-const d_top = document.getElementById("opDisplay");
-const d_bot = document.getElementById("currDisplay");
-const d_negation = document.getElementById("negation");
-d_negation.textContent = DISPLAY.negation;
-d_negation.style.visibility = "hidden";
-d_negation.toggle = function () {
-    if(!DISPLAY.toptext && d_negation.style.visibility === "visible") { d_negation.style.visibility = "hidden"; }
-    else if(!DISPLAY.toptext && d_negation.style.visibility === "hidden") { d_negation.style.visibility = "visible"; }
-    else if(DISPLAY.toptext && !DISPLAY.bottomtext) {
-        if(DISPLAY.toptext.toString().charAt(0) === NEGATIVE) {
-            DISPLAY.toptext = DISPLAY.toptext.substring(1);
-        }
-        else DISPLAY.toptext = NEGATIVE + DISPLAY.toptext;
-    }
-    else if(DISPLAY.toptext && DISPLAY.bottomtext) {
-        if(DISPLAY.bottomtext.charAt(0) === NEGATIVE) {
-            DISPLAY.bottomtext = DISPLAY.bottomtext.substring(1);
-        }
-        else DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
-    }
-    refresh();
-}
-d_negation.isShown = function () {
-    return d_negation.style.visibility === "visible";
-}
-const d_currOp = document.getElementById("currOp");
-
-// INITIATE MAIN PROGRAM
-
-refresh(); // lol
-
-// DISPLAY FUNCTIONS
-
-function assembleOperand(pressed) {
-    if(DISPLAY.bottomtext.length > 20) { 
-        marquee.textContent = "Yeah, this isn't that kind of calculator. Calm down.";
-        return; }
-    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && !DISPLAY.currSign) {
-        marquee.textContent = "I'm pretty sure you want an operator here...";
-        return; }
-    if(DISPLAY.bottomtext === ZERO.symbol && pressed === ZERO) {
-        marquee.textContent = "I have no idea what you plan to do with that many zeroes.";
-        return; }
-    if(pressed === DEC) {
-        if(DISPLAY.bottomtext.indexOf(".") !== -1) { 
-            marquee.textContent = "Are you trying to type in an IP address or something?";
-            return; }
-        if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) {
-            marquee.textContent = "Floating points, eh? Well, alright...";
-            DISPLAY.bottomtext = ZERO.symbol + DEC.symbol;
-            refresh(); return;
-        } else {
-            if(DISPLAY.bottomtext.length === 0) {
-                DISPLAY.bottomtext += ZERO.value + pressed.value;
-                refresh(); return;
-            }
-        }
-    }
-    DISPLAY.bottomtext += pressed.value;
-    marquee.textContent = "Building...";
-    refresh();
-}
-
-function refresh(){
-    d_top.textContent = DISPLAY.toptext;
-    d_bot.textContent = DISPLAY.bottomtext;
-    d_currOp.textContent = DISPLAY.currSign;
-    if(DISPLAY.isError()) error();
-    // these are memes
-    if(DISPLAY.toptext === "69") marquee.textContent = "Nice.";
-    if(DISPLAY.toptext === "5318008") marquee.textContent = "Quick! Flip your screen!";
-    if(DISPLAY.toptext === Math.E) marquee.textContent = "Euler's number?! That's impressive.";
-    // memes complete
-}
-
-function error() {
-    errFlag = 1;
-    d_top.textContent = "HOW MUCH TIME";
-    d_bot.textContent = "DO YOU HAVE?";
-    marquee.textContent = "Uh oh! Press any key to reset.";
-}
-
-//BUTTON FUNCTIONS
-
-function update(pressed){
-    marquee.textContent = "Executing...";
-    if(pressed === DEL) { backspace(); return; } // grab the backspace key
-    if(pressed === CLEAR) { reset(); refresh(); return; } // grab the AC key
-    if(errFlag) { reset(); errFlag = 0; refresh(); return; }; // break display on infinity
-    if(pressed.value !== null) { assembleOperand(pressed); return; } // if 0-9 or a decimal, populate the display
-    if(pressed === NEG) { d_negation.toggle(); return; } // allow user to toggle negation with a blank screen
-    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0) && (!DISPLAY.toptext && DISPLAY.toptext !== 0)) return; // operators don't work until the display is populated
-    if(pressed === EQUAL) { equalOut(); return; } // equals sign
-    if((DISPLAY.toptext || DISPLAY.toptext === 0) && 
-        (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && 
-        DISPLAY.currSign) { // this triggers a calculation when you use a new operator as an equals sign for a previous operation
-        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
-        DISPLAY.bottomtext = "";
-        DISPLAY.currSign = pressed.symbol;
-        globalLastOp = pressed;
-    }
-    if(!DISPLAY.toptext && DISPLAY.toptext !== 0) { // this handles the first operation pressed
-        if(negation.isShown()) { DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext; negation.toggle(); }
-        DISPLAY.toptext = DISPLAY.bottomtext; 
-        if(pressed !== EQUAL) DISPLAY.currSign = pressed.symbol; 
-        DISPLAY.bottomtext = "";
-    }
-    if((!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) { // this is changing operators when all else has failed
-        DISPLAY.currSign = pressed.symbol; globalLastOp = pressed; 
-    }
-    refresh();
-}
-
-function equalOut() { 
-    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (!DISPLAY.bottomtext && DISPLAY.bottomtext !== 0)) return;
-    if((DISPLAY.toptext || DISPLAY.toptext === 0) && (DISPLAY.bottomtext || DISPLAY.bottomtext == 0) && !DISPLAY.currSign) return;
-    if ((!DISPLAY.toptext && DISPLAY.toptext !== 0)) {
-        if(d_negation.isShown()) {
-            DISPLAY.bottomtext = NEGATIVE + DISPLAY.bottomtext;
-            d_negation.toggle();
-        }
-        DISPLAY.toptext = DISPLAY.bottomtext;
-        DISPLAY.bottomtext = "";
-    }
-    else if((DISPLAY.toptext || DISPLAY.toptext === 0) && (DISPLAY.bottomtext || DISPLAY.bottomtext === 0) && DISPLAY.currSign) {
-        DISPLAY.currSign = "";
-        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
-        DISPLAY.bottomtext = "";
-    }
-    else {
-        DISPLAY.toptext = operate(globalLastOp, DISPLAY.bottomtext, DISPLAY.toptext);
-        DISPLAY.bottomtext = "";
-        DISPLAY.currSign = globalLastOp.symbol;
-    }
-    refresh();
-    return;
-}
-
-function reset() {
-    console.clear();
-    console.log("All clear!");
-    DISPLAY.toptext = '';
-    DISPLAY.bottomtext = '';
-    DISPLAY.currSign = "";
-    d_negation.style.visibility = "hidden";
-    globalLastOp = {};
-    marquee.textContent = "All Clear! Enter a number to continue.";
-}
-
-function backspace() {
-    if(errFlag) {
-        console.error ("Nah, it's messed up. Resetting instead!");
-        reset(); errFlag=0; return;
-    }
-    if( DISPLAY.toptext > Number.MAX_SAFE_INTEGER ||
-        DISPLAY.bottomtext > Number.MAX_SAFE_INTEGER ) { 
-        console.error("We're gonna assume you meant to clear it.");
-        reset(); return; 
-    }
-    if(DISPLAY.bottomtext) DISPLAY.bottomtext = DISPLAY.bottomtext.toString().slice(0, -1);
-    else if(DISPLAY.currSign) {
-        DISPLAY.currSign = "";
-        DISPLAY.bottomtext = DISPLAY.toptext;
-        DISPLAY.toptext = "";
-    }
-    else if(DISPLAY.toptext) DISPLAY.toptext = DISPLAY.toptext.toString().slice(0, -1);
-    marquee.textContent = "Undoing...";
-    refresh();
-}
-
-// MATH FUNCTIONS
-
-function operate(operator, firstOperand, secondOperand) {
-    let expectedPrecision = 0;
-    if(firstOperand.toString().includes(DEC.symbol)) {
-        expectedPrecision = firstOperand.toString().split(DEC.symbol)[1].length;
-    }
-    if(secondOperand.toString().includes(DEC.symbol)) {
-        if(secondOperand.toString().split(DEC.symbol)[1].length > expectedPrecision){
-            expectedPrecision = secondOperand.toString().split(DEC.symbol)[1].length;
-        }
-    }
-    if(expectedPrecision > 0) {
-        switch(operator) {
-            case ADD:
-                return add(firstOperand, secondOperand).toFixed(expectedPrecision);
-            case SUB:
-                return sub(secondOperand, firstOperand).toFixed(expectedPrecision);
-            case DIV:
-                return div(secondOperand, firstOperand).toFixed(expectedPrecision);
-            case MUL:
-                return mul(firstOperand, secondOperand).toFixed(expectedPrecision);
-            case EXP:
-                return exp(secondOperand, firstOperand).toFixed(expectedPrecision);
-        }
-    } else {
-        switch(operator) {
-            case ADD:
-                return add(Number(firstOperand), Number(secondOperand));
-            case SUB:
-                return sub(Number(secondOperand), Number(firstOperand));
-            case DIV:
-                return div(Number(secondOperand), Number(firstOperand));
-            case MUL:
-                return mul(Number(firstOperand), Number(secondOperand));
-            case EXP:
-                return exp(Number(secondOperand), Number(firstOperand));
-        }
-    }
-}
-
-
-function add(first, second){
-    return Number(first) + Number(second);
-}
-
-function sub(first, second){
-    return Number(first) - Number(second);
-}
-
-function mul(first, second){
-    return Number(first) * Number(second);
-}
-
-function div(first, second){
-    return Number(first) / Number(second);
-}
-
-function exp(operand, exponent){
-    return Number(operand) ** Number(exponent);
-}
-
 // KEYPRESS HANDLING
 
 document.addEventListener("keyup", (e) => handleKeypress(e));
@@ -407,3 +411,10 @@ function handleKeypress(event) {
         default: return;
     }
 }
+
+
+// INITIATE MAIN PROGRAM
+
+refresh(); // lol
+
+// thanks for reading.
